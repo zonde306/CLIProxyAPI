@@ -2641,14 +2641,21 @@ func (m *Manager) refreshAuth(ctx context.Context, id string) {
 	log.Debugf("refreshed %s, %s, %v", auth.Provider, auth.ID, err)
 	now := time.Now()
 	if err != nil {
+		msg := err.Error()
 		m.mu.Lock()
 		if current := m.auths[id]; current != nil {
 			current.NextRefreshAfter = now.Add(refreshFailureBackoff)
-			current.LastError = &Error{Message: err.Error()}
+			current.LastError = &Error{Message: msg}
+			if strings.TrimSpace(msg) != "" {
+				current.StatusMessage = msg
+			}
+			current.Status = StatusError
+			current.UpdatedAt = now
 			m.auths[id] = current
 			if m.scheduler != nil {
 				m.scheduler.upsertAuth(current.Clone())
 			}
+			_ = m.persist(ctx, current)
 		}
 		m.mu.Unlock()
 		return

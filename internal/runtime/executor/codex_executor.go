@@ -577,9 +577,7 @@ func (e *CodexExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*
 		auth.Metadata = make(map[string]any)
 	}
 	if err != nil {
-		auth.Metadata["status"] = "error"
-		auth.Metadata["status_message"] = err.Error()
-		return auth, nil
+		return nil, err
 	}
 	auth.Metadata["id_token"] = td.IDToken
 	auth.Metadata["access_token"] = td.AccessToken
